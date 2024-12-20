@@ -8,6 +8,7 @@ import net.cengiz1.mstaff.utils.DailyReportScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class MStaff extends JavaPlugin {
     private static MStaff instance;
@@ -19,18 +20,31 @@ public class MStaff extends JavaPlugin {
         ConfigManager.initialize(getConfig());
         DatabaseManager.connect();
 
-        // Günlük rapor planlayıcısı ayarlanıyor
         String dailyReportTime = ConfigManager.getDailyReportTime();
         if (dailyReportTime != null) {
             String[] timeParts = dailyReportTime.split(":");
-            int hour = Integer.parseInt(timeParts[0]);
-            int minute = Integer.parseInt(timeParts[1]);
+            try {
+                int hour = Integer.parseInt(timeParts[0]);
+                int minute = Integer.parseInt(timeParts[1]);
+                long currentTime = System.currentTimeMillis();
+                long reportTime = currentTime + (hour * 3600 + minute * 60) * 1000;
+                long delay = reportTime - currentTime; // Gecikme süresi
+                long delayInTicks = delay / 50;
 
-            Bukkit.getScheduler().runTaskTimer(this, new DailyReportScheduler(), 0L, 20L * 60 * (hour * 60 + minute));
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        new DailyReportScheduler().run();
+                    }
+                }.runTaskTimer(this, delayInTicks, 20L * 60 * 60 * 24);
+            } catch (NumberFormatException e) {
+                getLogger().warning("dailyReportTime config değeri geçersiz: " + dailyReportTime);
+            }
         }
 
         getCommand("staffmanager").setExecutor(new StaffCommand());
     }
+
 
     @Override
     public void onDisable() {
