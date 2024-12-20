@@ -1,0 +1,13 @@
+name: MStaff
+version: '${project.version}'
+main: net.cengiz1.mstaff.MStaff
+api-version: '1.20'
+commands:
+  staffmanager:
+    description: "Yetkili komutları"
+    usage: "/staff <playerName> veya /staff senddiscord"
+
+permissions:
+  staffmanager.staff:
+    description: "Yetkili komutlarını kullanma izni"
+    default: op
